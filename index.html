@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Color Filter</title>
+    <style>
+      .container{
+        position: relative;
+        width: auto;
+        height: auto;
+        display: inline-block;
+      }
+      .overlay{
+        display: block;
+        width: 28em;
+        height: 100%;
+        position: absolute;
+        top: 0;
+        left: 0;
+        z-index: 999;
+        opacity: 0.5;
+      }
+      .red{
+        background: red;
+      }
+      .green{
+        background: green;
+      }
+      #preview{
+        width: 28em;
+        height: 100%;
+      }
+      .label{
+        font-size: 2em;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        background: white;
+      }
+      #capture{
+        font-size: 5em;
+        display: block;
+      }
+    </style>
+  </head>
+  <body>
+    <video id='preview' autoplay controls></video>
+    <button id='capture'>Capture</button>
+    <div class='container'>
+      <canvas id='canvas-red' class='preview'></canvas>
+      <span class='label'>FILTER MERAH</span>
+    </div>
+    <div class='container'>
+      <canvas id='canvas-grn' class='preview'></canvas>
+      <span class='label'>FILTER HIJAU</span>
+    </div>
+  </body>
+  <script>
+    (function(){
+      let whites = 200;
+      let cvsred = document.querySelector('#canvas-red');
+      let ctxred = cvsred.getContext('2d');
+      let cvsgrn = document.querySelector('#canvas-grn');
+      let ctxgrn = cvsgrn.getContext('2d');
+      const preview = document.querySelector('#preview');
+      navigator.mediaDevices.getUserMedia({video: true}).then((stream)=>{
+        preview.srcObject = stream
+      });
+      const capture = document.querySelector('#capture');
+      capture.addEventListener('click', ()=>{
+        const ratio = preview.videoWidth/preview.videoHeight;
+        cvsred.height = cvsred.width / ratio;
+        cvsgrn.height = cvsgrn.width / ratio; 
+        ctxred.putImageData(MaskPixel(1,0,0,preview,cvsred,ctxred),0,0);
+        ctxgrn.putImageData(MaskPixel(0,1,1,preview,cvsgrn,ctxgrn),0,0);
+      });
+      let MaskPixel = (r,g,b,img,cvs,ctx) => {
+        ctx.drawImage(img,0,0,cvs.width,cvs.height);
+        orig = ctx.getImageData(0,0,cvs.width,cvs.height);
+        for(let i = 0; i < orig.data.length; i+=4){
+          if(orig.data[i]>= whites && orig.data[i+1] >= whites && orig.data[i+2] >= whites) continue
+          orig.data[i] = r*orig.data[i];
+          orig.data[i+1] = g*orig.data[i+1];
+          orig.data[i+2] = b*orig.data[i+2];
+        }
+        return orig;
+      }
+    })();
+  </script>
+</html>
