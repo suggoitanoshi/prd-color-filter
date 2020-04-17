@@ -56,7 +56,6 @@
   </body>
   <script>
     (function(){
-      let whites = 200;
       let cvsred = document.querySelector('#canvas-red');
       let ctxred = cvsred.getContext('2d');
       let cvsgrn = document.querySelector('#canvas-grn');
@@ -70,17 +69,19 @@
         const ratio = preview.videoWidth/preview.videoHeight;
         cvsred.height = cvsred.width / ratio;
         cvsgrn.height = cvsgrn.width / ratio; 
-        ctxred.putImageData(MaskPixel(1,0,0,preview,cvsred,ctxred),0,0);
-        ctxgrn.putImageData(MaskPixel(0,1,1,preview,cvsgrn,ctxgrn),0,0);
+        ctxred.putImageData(MaskPixel(2,0,0,preview,cvsred,ctxred),0,0);
+        ctxgrn.putImageData(MaskPixel(0,2,0,preview,cvsgrn,ctxgrn),0,0);
       });
       let MaskPixel = (r,g,b,img,cvs,ctx) => {
+        const lfactor = 1.5;
         ctx.drawImage(img,0,0,cvs.width,cvs.height);
         orig = ctx.getImageData(0,0,cvs.width,cvs.height);
         for(let i = 0; i < orig.data.length; i+=4){
-          if(orig.data[i]>= whites && orig.data[i+1] >= whites && orig.data[i+2] >= whites) continue
-          orig.data[i] = r*orig.data[i];
-          orig.data[i+1] = g*orig.data[i+1];
-          orig.data[i+2] = b*orig.data[i+2];
+          // if(orig.data[i]>= whites && orig.data[i+1] >= whites && orig.data[i+2] >= whites) continue
+          let lightness = ((r*orig.data[i])+(g*orig.data[i+1])+(b*orig.data[i+2]))/3;
+          orig.data[i] = lightness*lfactor;
+          orig.data[i+1] = lightness*lfactor;
+          orig.data[i+2] = lightness*lfactor;
         }
         return orig;
       }
